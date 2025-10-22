@@ -3,6 +3,7 @@
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PostContoller;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -53,5 +54,6 @@ require __DIR__ . '/auth.php';
 
 
 Route::get("/test" , function(){
-    return view("test" , ["name" => "aya"]);
-});
+    $user = Auth::user();
+    return view("welcome" , ["user" => $user]);
+})->middleware("auth");
