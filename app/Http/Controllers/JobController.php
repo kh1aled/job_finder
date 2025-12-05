@@ -6,31 +6,22 @@ use App\Http\Requests\JobRequest;
 use App\Models\Job;
 use App\Models\Employer;
 use App\Models\Tag;
-use App\Policies\JobPolicy;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class JobController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $jobs = Job::with('tags')->orderBy('featured', 'desc')->get()->groupBy('featured');
+        // dd(Tag::all());
+        $jobs = Job::with('tags', 'employer')->orderBy('featured', 'desc')->get();
 
+        // تقسيم الوظائف featured و regular
+        [$featuredJobs, $regularJobs] = $jobs->partition(fn($job) => $job->featured);
 
-        $featuredJobs = $jobs->has('1') ? $jobs['1'] : collect();
-        $regularJobs = $jobs->has('0') ? $jobs['0'] : collect();
-
-        // if (Auth::check()) {
-        //     dd(Auth::user()->avatar);
-        // } else {
-        //     dd("user is not authanticated");
-        // }
+        // ترتيب الوظائف الأخيرة حسب التاريخ
+        $regularJobs = $regularJobs->sortByDesc('created_at');
 
         return view('jobs.index', [
             'featuredJobs' => $featuredJobs,
@@ -39,95 +30,50 @@ class JobController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
-
         return view("jobs.create");
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(JobRequest $request)
     {
-
-        // Get the tags from the request
         $tags = json_decode($request->input('tags'), true);
         $tagIds = [];
 
-        // Create tags if they don't exist or get the existing IDs
         foreach ($tags as $tagName) {
             $tag = Tag::firstOrCreate(['name' => $tagName]);
             $tagIds[] = $tag->id;
         }
 
-        // Check if the user is an employer or create a new one
+        $employer = Employer::firstOrCreate(
+            ['user_id' => Auth::id()],
+            ['name' => Auth::user()->name, 'logo' => Auth::user()->avatar]
+        );
 
-        $employer = Employer::where('user_id', Auth::id())->first();
-        if (!$employer) {
-            $employer = Employer::create([
-                'user_id' => Auth::id(),
-                'name' => Auth::user()->name,
-                'logo' => Auth::user()->avatar,
-            ]);
-        }
-
-        // Validate the input data
         $validatedData = $request->validated();
-
-        // Add employer ID to the validated data
         $validatedData["employer_id"] = $employer->id;
 
-        // Upload and store the image
-        $validatedData['avatar'] = $this->uploadAvatar($request, $job->avatar ?? null);
+        // رفع الصورة قبل إنشاء الوظيفة
+        $validatedData['avatar'] = $this->uploadAvatar($request, null);
 
-        // Create the job
         $job = Job::create($validatedData);
-
-        // Link the tags to the job using Many-to-Many relationship
         $job->tags()->sync($tagIds);
 
-        // Redirect to the jobs index page
-        return redirect()->route('jobs.index');
+        return redirect()->route('jobs.index')->with('success', 'Job added successfully!');
     }
 
-
-
-    /**
-     * Display the specified resource.
-     */
     public function show(Job $job)
     {
-        //
-        $employer = $job->employer;
-
-        return view("jobs.show", ["job" => $job, "employer" => $employer]);
+        return view("jobs.show", ["job" => $job, "employer" => $job->employer]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Job $job)
     {
-        //
-
-        $tags = $job->tags;
-
-
-
-        return view("jobs.edit", ["job" => $job, "tags" => $tags]);
+        return view("jobs.edit", ["job" => $job, "tags" => $job->tags]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(JobRequest $request, Job $job)
     {
-        // Get the tags from the request
         $tags = json_decode($request->input('tags'), true);
         $tagIds = [];
 
@@ -140,67 +86,44 @@ class JobController extends Controller
             }
         }
 
-        // Check if the user is an employer or create a new one
         $employer = Employer::firstOrCreate(
             ['user_id' => Auth::id()],
-            [
-                'name' => Auth::user()->name,
-                'logo' => Auth::user()->avatar,
-            ]
+            ['name' => Auth::user()->name, 'logo' => Auth::user()->avatar]
         );
 
-        // Validate the input data
         $validatedData = $request->validated();
-
-
-        // Add employer ID to the validated data
         $validatedData["employer_id"] = $employer->id;
+        $validatedData['avatar'] = $this->uploadAvatar($request, $job->avatar);
 
-        // Upload and store the image
-        $validatedData['avatar'] = $this->uploadAvatar($request, $job->avatar ?? null);
-
-
-        // Update the job
         $job->update($validatedData);
-
-        // Link the tags to the job using Many-to-Many relationship
         $job->tags()->sync($tagIds);
 
-        // Redirect to the jobs index page
-
-        return redirect()->route('jobs.show', $job->id)->with('success', 'Job added successfully!');
+        return redirect()->route('jobs.show', $job->id)->with('success', 'Job updated successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Job $job)
     {
-        //
-        $job->delete();
         Storage::disk('public')->delete('posts/' . $job->avatar);
+        $job->delete();
 
         return redirect()->route('jobs.index')->with('success', 'Job deleted successfully.');
     }
+
     public function search(Request $request)
     {
-        //
         $query = $request->input("query");
 
         if (!$query) {
             return redirect()->route('jobs.index')->with('error', 'يجب إدخال كلمة للبحث.');
         }
 
-        $jobs = Job::where("title", "LIKE", "%$query%")->orWhereHas("tags", function ($q) use ($query) {
-            $q->where('name', 'LIKE', "%{$query}%");
-        })->with('tags')->get();
-
-
+        $jobs = Job::where("title", "LIKE", "%$query%")
+            ->orWhereHas("tags", fn($q) => $q->where('name', 'LIKE', "%{$query}%"))
+            ->with('tags', 'employer')
+            ->get();
 
         return view('jobs.search', compact('jobs', 'query'));
     }
-
-
 
     private function uploadAvatar(Request $request, $currentAvatar = null)
     {
@@ -213,5 +136,12 @@ class JobController extends Controller
             return $imageName;
         }
         return $currentAvatar;
+    }
+
+    public function salaries()
+    {
+        $jobs = Job::with('employer')->orderBy('salary', 'desc')->get();
+
+        return view('jobs.salary', compact('jobs'));
     }
 }

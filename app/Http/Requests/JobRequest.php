@@ -24,7 +24,7 @@ class JobRequest extends FormRequest
         return [
             //
             'title' => ["required", "string", "min:6", "max:25"],
-            'salary' => ["required", "string", "min:3"],
+            'salary' => ["required", "string"],
             'location' => ["required", "string", "min:3"],
             'url' => ["required", "string", "min:6"],
             'schedule' => ["required", "string", "min:6"],

@@ -1,7 +1,7 @@
 @props(['id', 'title', 'employer', 'salary', 'location', 'schedule', 'url', 'featured', 'tags', 'avatar'])
 
 <div
-    class="justify-start items-center px-4 py-8  gap-6 mt-5  flex  duration-300  rounded-xl text-center border border-transparent transition-colors hover:border-blue-800 cursor-pointer">
+    class="justify-start items-center px-4 py-8  gap-6 mt-5  flex  duration-300  rounded-xl text-center ">
 
 
     <x-animate-image src="{{ asset('storage/posts/' . e($avatar)) }}" div_width="size-12 rounded-full" />

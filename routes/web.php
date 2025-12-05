@@ -3,6 +3,7 @@
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PostContoller;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,7 @@ Route::controller(JobController::class)->group(
     function () {
         Route::get("/", "index")->name("jobs.index");
         Route::get("/jobs", "index")->name("jobs.index");
+        Route::get("/jobs/salary", "salaries")->name("jobs.salary");
         Route::get("/jobs/search", "search")->name("jobs.search");
         Route::get("/jobs/create", "create")->name("jobs.create")->middleware("auth");
         Route::delete("/jobs/{job}", "destroy")->name("jobs.destroy")->middleware("auth");
@@ -50,10 +52,26 @@ Route::get('/send-test', function () {
     return 'Sent (check Mailtrap inbox)';
 });
 
+Route::get('/upload-video', function () {
+    return view("upload");
+});
+
+Route::post('/upload-video', action: function (Request $request) {
+    $request->validate([
+        'video' => 'required',
+    ]);
+
+    $path = $request->file('video')->store('videos', 'public');
+
+
+    return $path;
+})->name("upload.video");
+
+
 require __DIR__ . '/auth.php';
 
 
-Route::get("/test" , function(){
+Route::get("/test", function () {
     $user = Auth::user();
-    return view("welcome" , ["user" => $user]);
+    return view("welcome", ["user" => $user]);
 })->middleware("auth");
