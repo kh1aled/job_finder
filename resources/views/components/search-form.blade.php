@@ -13,10 +13,11 @@
         searchInput.addEventListener("input", function() {
             if (searchInput.value.trim().length > 0) { 
                 searchForm.submit();
+            }else{
+                window.location.href = "{{ route('jobs.index') }}";
             }
         });
 
-      
         searchInput.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault(); 

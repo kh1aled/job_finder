@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="space-y-10 mt-12">
         <!-- نموذج البحث -->
-        <x-search-form/>
+        <x-search-form />
 
         <!-- الوظائف المميزة -->
         <section>
@@ -10,18 +10,9 @@
             @if ($featuredJobs->isNotEmpty())
                 <div class="grid lg:grid-cols-3 gap-8">
                     @foreach ($featuredJobs as $job)
-                        <x-job-card 
-                            :id="$job->id" 
-                            :title="$job->title" 
-                            :employer="$job->employer" 
-                            :salary="$job->salary"
-                            :location="$job->location" 
-                            :schedule="$job->schedule" 
-                            :url="$job->url" 
-                            :featured="$job->featured" 
-                            :tags="$job->tags"
-                            :avatar="$job->avatar" 
-                        />
+                        <x-job-card :id="$job->id" :title="$job->title" :user="$job->user" :salary="$job->salary"
+                            :location="$job->location" :schedule="$job->schedule" :url="$job->url" :featured="$job->featured" :tags="$job->tags"
+                            :avatar="$job->avatar" />
                     @endforeach
                 </div>
             @else
@@ -46,18 +37,9 @@
             <x-section-heading>Recent Jobs</x-section-heading>
             @if ($regularJobs->isNotEmpty())
                 @foreach ($regularJobs as $job)
-                    <x-job-card-wide 
-                        :id="$job->id" 
-                        :title="$job->title" 
-                        :employer="$job->employer" 
-                        :salary="$job->salary"
-                        :location="$job->location" 
-                        :schedule="$job->schedule" 
-                        :url="$job->url" 
-                        :featured="$job->featured" 
-                        :tags="$job->tags"
-                        :avatar="$job->avatar" 
-                    />
+                    <x-job-card-wide :id="$job->id" :title="$job->title" :user="$job->user" :salary="$job->salary"
+                        :location="$job->location" :schedule="$job->schedule" :description="$job->description" :featured="$job->featured" :tags="$job->tags"
+                        :avatar="$job->avatar" />
                 @endforeach
             @else
                 <p class="text-center text-xl mt-6">No recent jobs available.</p>

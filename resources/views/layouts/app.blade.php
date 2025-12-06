@@ -24,6 +24,9 @@
 <body class="font-sans antialiased bg-black">
     <div class="min-h-screen bg-black text-white px-10">
 
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
         {{-- page header --}}
 

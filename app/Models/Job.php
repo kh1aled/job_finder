@@ -13,12 +13,13 @@ class Job extends Model
 
     protected $fillable = [
         'title',
+        'description',
         'salary',
         'location',
         'url',
         'schedule',
         'avatar',
-        'employer_id'
+        'user_id'
     ];
 
     public function tags()
@@ -26,9 +27,9 @@ class Job extends Model
         return $this->belongsToMany(Tag::class);
     }
 
-    public function employer()
+    public function user()
     {
-        return $this->belongsTo(Employer::class);
+        return $this->belongsTo(User::class);
     }
     
 }

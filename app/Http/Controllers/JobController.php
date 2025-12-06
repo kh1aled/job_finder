@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JobRequest;
 use App\Models\Job;
-use App\Models\Employer;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +13,8 @@ class JobController extends Controller
 {
     public function index()
     {
-        // dd(Tag::all());
-        $jobs = Job::with('tags', 'employer')->orderBy('featured', 'desc')->get();
-
+        $jobs = Job::with('tags', 'user')->orderBy('featured', 'desc')->get();
+        
         // تقسيم الوظائف featured و regular
         [$featuredJobs, $regularJobs] = $jobs->partition(fn($job) => $job->featured);
 
@@ -45,15 +43,8 @@ class JobController extends Controller
             $tagIds[] = $tag->id;
         }
 
-        $employer = Employer::firstOrCreate(
-            ['user_id' => Auth::id()],
-            ['name' => Auth::user()->name, 'logo' => Auth::user()->avatar]
-        );
-
         $validatedData = $request->validated();
-        $validatedData["employer_id"] = $employer->id;
-
-        // رفع الصورة قبل إنشاء الوظيفة
+        $validatedData["user_id"] = Auth::id();
         $validatedData['avatar'] = $this->uploadAvatar($request, null);
 
         $job = Job::create($validatedData);
@@ -64,7 +55,7 @@ class JobController extends Controller
 
     public function show(Job $job)
     {
-        return view("jobs.show", ["job" => $job, "employer" => $job->employer]);
+        return view("jobs.show", ["job" => $job]);
     }
 
     public function edit(Job $job)
@@ -86,13 +77,8 @@ class JobController extends Controller
             }
         }
 
-        $employer = Employer::firstOrCreate(
-            ['user_id' => Auth::id()],
-            ['name' => Auth::user()->name, 'logo' => Auth::user()->avatar]
-        );
-
         $validatedData = $request->validated();
-        $validatedData["employer_id"] = $employer->id;
+        $validatedData["user_id"] = Auth::id(); // ربط الوظيفة بالمستخدم الحالي
         $validatedData['avatar'] = $this->uploadAvatar($request, $job->avatar);
 
         $job->update($validatedData);
@@ -119,7 +105,7 @@ class JobController extends Controller
 
         $jobs = Job::where("title", "LIKE", "%$query%")
             ->orWhereHas("tags", fn($q) => $q->where('name', 'LIKE', "%{$query}%"))
-            ->with('tags', 'employer')
+            ->with('tags', 'user')
             ->get();
 
         return view('jobs.search', compact('jobs', 'query'));
@@ -140,7 +126,7 @@ class JobController extends Controller
 
     public function salaries()
     {
-        $jobs = Job::with('employer')->orderBy('salary', 'desc')->get();
+        $jobs = Job::with('user')->orderBy('salary', 'desc')->get();
 
         return view('jobs.salary', compact('jobs'));
     }

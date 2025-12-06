@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ApplicationController;
 
 //jobs routes
 
@@ -25,7 +26,9 @@ Route::controller(JobController::class)->group(
     }
 );
 
-// Route::get('/jobs/search', [JobController::class, 'search'])->name('jobs.search');
+Route::get('/jobs/{job}/application', [ApplicationController::class, 'index'])->name('applications.index')->middleware('auth');
+Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store'])->name('applications.apply')->middleware('auth');
+
 
 
 
@@ -35,7 +38,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit'); // Edit profile
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });

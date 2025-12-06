@@ -1,7 +1,10 @@
+@props(['id', 'title', 'user', 'salary', 'location', 'schedule', 'description', 'featured', 'tags', 'avatar'])
+
+
 <a id="{{ $id }}" href="{{ route('jobs.show', $id) }}"
     {{ $attributes->merge(['class' => 'flex flex-col bg-white/5 justify-center duration-300 items-center p-4 bg-red-700 rounded-xl gap-3 text-center border border-transparent transition-colors hover:border-blue-800 cursor-pointer group']) }}>
 
-    <h3 class="self-start text-sm">{{ $employer->name ?? 'Unknown Employer' }}</h3>
+    <h3 class="self-start text-sm">{{ $user->name ?? 'Unknown User' }}</h3>
 
     <div class="font-bold py-8">
         <h1 class="group-hover:text-blue-600 duration-300">{{ $title ?? 'Untitled Job' }}</h1>
