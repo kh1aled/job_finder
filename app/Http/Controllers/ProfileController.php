@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Employer;
 use App\Models\Job;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +18,15 @@ class ProfileController extends Controller
      * Display the user's profile form.
      */
 
-     public function show(){
-        $employer_id = Employer::where("user_id", Auth::id())->value("id");
+    public function show()
+    {
+        $userId = Auth::id();
+        $jobs = Job::where("user_id", $userId)->with("tags")->get();
 
-         $jobs = Job::where("employer_id" , $employer_id)->with("tags")->get();
-        return view("profile.show" , ["jobPosts" => $jobs]);
-     }
+        return view("profile.show", [
+            "jobPosts" => $jobs
+        ]);
+    }
 
     public function edit(Request $request): View
     {
@@ -42,9 +46,9 @@ class ProfileController extends Controller
             $request->user()->email_verified_at = null;
         }
 
-        if($request->hasFile("avatar")){
+        if ($request->hasFile("avatar")) {
             //get file
-            $myImage= $request->file("avatar");
+            $myImage = $request->file("avatar");
 
             //get file extension
             $extenstion = $myImage->getClientOriginalExtension();
@@ -53,7 +57,7 @@ class ProfileController extends Controller
             $imageName = time() . "." . $extenstion;
 
             //save file in my server
-            $path = $myImage->storeAs("/images" , $imageName , "public");
+            $path = $myImage->storeAs("/images", $imageName, "public");
 
             $request->user()->avatar = $imageName;
         }
@@ -63,7 +67,7 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
-    
+
 
     /**
      * Delete the user's account.

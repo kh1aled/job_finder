@@ -12,7 +12,7 @@
 
             <div class="flex flex-col">
                 <h1 class="text-lg text-gray-200 font-bold">{{ $job->user->name ?? 'Unknown Company' }}</h1>
-                <p class="text-xs text-gray-400">{{ $job->created_at->diffForHumans() }}</p>
+                <p class="text-xs text-gray-400">{{ $job->created_at }}</p>
             </div>
         </div>
 
@@ -29,24 +29,30 @@
             div_width="w-full h-80 sm:h-[32rem] mt-5 rounded-xl" alt="{{ $job->user->name ?? 'Company Logo' }}" />
 
         {{-- Apply Button --}}
+        {{-- Apply Button --}}
         @auth
-        @php
-            $alreadyApplied = \App\Models\Application::where('job_id', $job->id)
-                ->where('user_id', auth()->id())
-                ->exists();
-        @endphp
+            @php
+                $alreadyApplied = \App\Models\Application::where('job_id', $job->id)
+                    ->where('user_id', auth()->id())
+                    ->exists();
+                $isOwner = auth()->id() === $job->user_id;
+            @endphp
 
-        @if (!$alreadyApplied)
-            <a href="{{ url('jobs/' . $job->id . '/apply') }}"
-                class="inline-block mt-6 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition">
-                Apply for this Job
-            </a>
-        @else
-            <p class="mt-6 text-green-400 font-semibold">
-                ✅ You have already applied to this job.
-            </p>
-        @endif
-            @if (auth()->id() !== $job->user_id)
+            @if (!$isOwner)
+                @if (!$alreadyApplied)
+                    <a href="{{ url('jobs/' . $job->id . '/application') }}"
+                        class="inline-block mt-6 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition">
+                        Apply for this Job
+                    </a>
+                @else
+                    <p class="mt-6 text-green-400 font-semibold">
+                        ✅ You have already applied to this job.
+                    </p>
+                @endif
+            @else
+                <p class="mt-6 text-yellow-400 font-semibold">
+                    ⚠ You cannot apply to your own job.
+                </p>
             @endif
         @else
             <div class="mt-6">
@@ -56,6 +62,7 @@
                 </a>
             </div>
         @endauth
+
 
         {{-- Admin Controls --}}
         @can('update-job', $job)

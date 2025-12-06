@@ -36,8 +36,8 @@ class RegisteredUserController extends Controller
         'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
     ]);
 
-    // تخزين الصورة في public/storage/images
     $imageName = time() . '.' . $request->avatar->extension();
+    $request->avatar->move(public_path('storage/images'), $imageName);
 
     $validatedData['avatar'] = $imageName;
     $validatedData['password'] = Hash::make($request->password);
@@ -50,7 +50,7 @@ class RegisteredUserController extends Controller
 
     event(new Registered($user));
 
-    Auth::login($user, false); // لا يقوم بتفعيل الجلسة تلقائيًا
+    Auth::login($user, false);
 
     return redirect()->route('jobs.index');
 }

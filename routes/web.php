@@ -26,10 +26,30 @@ Route::controller(JobController::class)->group(
     }
 );
 
-Route::get('/jobs/{job}/application', [ApplicationController::class, 'index'])->name('applications.index')->middleware('auth');
-Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store'])->name('applications.apply')->middleware('auth');
+Route::get('/jobs/{job}/application', [ApplicationController::class, 'index'])
+    ->name('applications.index')
+    ->middleware('auth');
+
+Route::get("/applications",  [ApplicationController::class, 'applicationsByUser'])->name('applications.byUser')
+    ->middleware('auth');
+
+Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store'])
+    ->name('applications.apply')
+    ->middleware('auth');
 
 
+Route::get('/companies', function () {
+    $companies = [
+        ['name' => 'Google', 'logo' => 'google.png', 'description' => 'Search engine and tech giant'],
+        ['name' => 'Microsoft', 'logo' => 'microsoft.png', 'description' => 'Software, Cloud and AI solutions'],
+        ['name' => 'Apple', 'logo' => 'apple.png', 'description' => 'Innovative consumer electronics'],
+        ['name' => 'Amazon', 'logo' => 'amazon.png', 'description' => 'E-commerce and Cloud computing'],
+        ['name' => 'Facebook', 'logo' => 'facebook.png', 'description' => 'Social media platform'],
+        ['name' => 'Tesla', 'logo' => 'tesla.png', 'description' => 'Electric vehicles and energy solutions'],
+    ];
+
+    return view('companies.index', compact('companies'));
+})->name('companies.index');
 
 
 Route::get('/dashboard', function () {
@@ -72,9 +92,3 @@ Route::post('/upload-video', action: function (Request $request) {
 
 
 require __DIR__ . '/auth.php';
-
-
-Route::get("/test", function () {
-    $user = Auth::user();
-    return view("welcome", ["user" => $user]);
-})->middleware("auth");

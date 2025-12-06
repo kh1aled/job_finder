@@ -1,96 +1,95 @@
-<section>
+<section class="max-w-3xl mx-auto space-y-6">
     <x-section-head>Profile Information</x-section-head>
 
-    <header>
-        <p class="mt-1 text-sm text-gray-300 text-center">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
+    <p class="mt-1 text-sm text-gray-400 text-center">
+        {{ __("Update your account's profile information and email address.") }}
+    </p>
 
+    {{-- Form to send verification email --}}
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
+    {{-- Update Profile Form --}}
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data"
+        class="mt-6 space-y-6 p-6 rounded-xl shadow-md">
         @csrf
         @method('patch')
 
-        <!-- Email Address -->
+        <!-- Name -->
         <x-form-fields>
-            <x-input-label for="name" :value="__('name')" />
-
+            <x-input-label for="name" :value="__('Name')" />
             <x-input-form id="name" type="text" name="name" :value="old('name', $user->name)" required autofocus
                 autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </x-form-fields>
 
-
-        <!-- Email Address -->
+        <!-- Email -->
         <x-form-fields>
             <x-input-label for="email" :value="__('Email')" />
-            <x-input-form id="email " type="email" name="email" :value="old('email', $user->email)" required
+            <x-input-form id="email" type="email" name="email" :value="old('email', $user->email)" required
                 autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
+                <p class="text-sm mt-2 text-yellow-400 flex0start">
+                    {{ __('Your email address is unverified.') }}
+                    <button form="send-verification"
+                        class="underline text-sm hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        {{ __('Click here to re-send the verification email.') }}
+                    </button>
+                </p>
 
-                        <button form="send-verification"
-                            class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
+                @if (session('status') === 'verification-link-sent')
+                    <p class="mt-2 font-medium text-sm text-green-500">
+                        {{ __('A new verification link has been sent to your email address.') }}
                     </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
+                @endif
             @endif
         </x-form-fields>
 
-       {{-- avatar img --}}
+        <!-- Avatar Upload -->
         <x-form-fields class="justify-center items-center">
-
-            <x-input-label for="tags" :value="__('Avatar Image')" />
-
+            <x-input-label for="avatar" :value="__('Avatar Image')" />
 
             <div
-                class="w-full max-w-xl rounded-xl p-10 border border-white border-dashed flex justify-center items-center flex-col">
-                <div id="image_upload_from_update" class="mt-3 block">
+                class="w-full max-w-xl rounded-xl p-6 border border-white/20 border-dashed flex flex-col justify-center items-center gap-3">
 
+                <div id="image_upload_from_update" class="block">
                     <x-label-button-primary for="avatar_from_update" type="button">
-                        Avatar Image
+                        Choose Avatar
                     </x-label-button-primary>
                 </div>
 
-                <div id="image_update_from_update" class="mt-3 hidden justify-center items-center gap-3 flex-col">
-                    <img id="image_from_update" src="{{ asset('/storage/images/' . $user->avatar) }}" alt="" class="w-20 h-20 rounded-xl">
-                    
-                    <div class="flex justify-center items-center gap-3">
+                <div id="image_update_from_update" class="hidden flex flex-col items-center gap-3">
+                    <img id="image_from_update" src="{{ asset('/storage/images/' . $user->avatar) }}" alt="Avatar"
+                        class="w-24 h-24 rounded-full object-cover shadow-md">
 
-
-                        <x-label-button-primary type="button" for="avatar_from_update" id="avatar_update">
-                            update
+                    <div class="flex gap-3">
+                        <x-label-button-primary for="avatar_from_update" type="button" id="avatar_update">
+                            Update
                         </x-label-button-primary>
                         <x-danger-button type="button" id="delete_image_from_update">Delete</x-danger-button>
-
                     </div>
                 </div>
+
             </div>
-            <input type="file" name="avatar" id="avatar_from_update" value="{{$user->avatar}}" class="hidden">
+
+            <input type="file" name="avatar" id="avatar_from_update" class="hidden" accept="image/*">
             <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
         </x-form-fields>
 
-        <div class="flex items-center justify-end gap-4">
-            <x-primary-button>{{ __('Update') }}</x-primary-button>
 
-            @if (session('status') === 'profile-updated')
-                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600">{{ __('Saved.') }}</p>
+        <div class="flex flex-col items-center justify-center gap-4 mt-4">
+            <x-primary-button class="px-6 py-2 text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                {{ __('Update') }}
+            </x-primary-button>
+
+            @if (session('status') === 'password-updated')
+                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2500)"
+                    class="text-sm text-green-500 font-medium mt-2">
+                    {{ __('Saved.') }}
+                </p>
             @endif
         </div>
     </form>
